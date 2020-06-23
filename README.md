@@ -41,12 +41,12 @@ You can also directly download our preprocessed datasets from [here](https://dri
 
 ##### Training:
 
-`python train_models.py --epoch 100 --decay_period 80 --lr 0.001 --optimizer sgd  --gpu 0  --batch_size 4 --batch_update_period 32  --num_views 12   --model model  --num_classes 10 --dataset_path xxxxx/xxxx/modelnet10`
+`python train_models.py --batch_size 4 --batch_update_period 32  --num_views 12  --num_classes 10 --dataset_path /xxxxx/xxxx/modelnet10`
 
 Notes: Due to limited GPU memory, we can only feed the network with a small batch size (about 2~4). To prevent unstable training with a small batch size, we manually aggregate the gradient and do back propagation every **batch_update_period**.
 
 ##### Testing:
-`python test.py --batch_size 4  --num_views 12   --model model  --num_classes 10 --dataset_path xxxxx/xxxx/modelnet10 --checkpoint xxxx/xxxx/xxx.params`
+`python test.py --batch_size 4  --num_views 12 --num_classes 10 --dataset_path /xxxxx/xxxx/modelnet10 --checkpoint /xxxx/xxxx/xxx.params`
 
 To reproduce the results in our paper, use the corresponding checkpoints to evaluate the models. Please download the checkpoint files from [here](https://drive.google.com/drive/folders/1v1CfqucWkqEvV-kHPg2NlhVCl67PCT5g?usp=sharing). 
 
