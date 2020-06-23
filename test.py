@@ -2,14 +2,13 @@ import os
 
 import argparse
 
-import importlib
-
 import mxnet
 from mxnet import gluon
 from mxnet.gluon.data.vision.transforms import Compose, ToTensor, Normalize
 
 import utils
 from datahelper import MultiViewImageDataset
+from model import MVRNN
 
 
 def parse_args():
@@ -31,8 +30,14 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    model = importlib.import_module(args.model)
-    net = model.get_model(args)
+    '''initialize the network'''
+    ctx = [mxnet.gpu(gpu_id) for gpu_id in args.gpu]
+
+    net = MVRNN(cnn_arch='vgg11_bn', cnn_feature_length=4096, num_views=args.num_views, num_class=args.num_classes,
+                pretrained=True, pretrained_cnn=None, ctx=ctx)
+    net.load_parameters(args.checkpoint, ctx=ctx)
+
+    net.hybridize()
     metric = mxnet.metric.Accuracy()
     test_ds = MultiViewImageDataset(os.path.join(args.dataset_path, 'test'), args.num_views,
                                     transform=Compose([
@@ -41,7 +46,6 @@ if __name__ == "__main__":
                                                   std=(0.229, 0.224, 0.225))]))
     loader = gluon.data.DataLoader
     test_data = loader(test_ds, args.batch_size, shuffle=False, last_batch='keep')
-    ctx = [mxnet.gpu(gpu_id) for gpu_id in args.gpu]
     print(
         'test on dataset %s, acc %s ' % (
             args.dataset_path, utils.test(metric, ctx, net, test_data, num_views=args.num_views,

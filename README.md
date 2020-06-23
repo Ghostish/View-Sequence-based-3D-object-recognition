@@ -32,6 +32,8 @@ To train the model on GPUs, please make sure [CUDA](https://developer.nvidia.com
        ├── train  
        ...... 
 
+You can also directly download the prepared datasets from our [repo](./datasets).
+
 ---
 ### Usage
 
@@ -46,6 +48,11 @@ Notes: Due to limited GPU memory, we can only feed the network with a small batc
 ##### Testing:
 `python test.py --batch_size 4  --num_views 12   --model model  --num_classes 10 --dataset_path xxxxx/xxxx/modelnet10 --checkpoint xxxx/xxxx/xxx.params`
 
+To reproduce the results in our paper, use the [checkpoints](./trained_models) to evaluate the models:
+
+`python test.py --batch_size 4  --num_views 12   --model model  --num_classes 10 --dataset_path xxxxx/xxxx/modelnet10 --checkpoint ./trained_models/M10-9526.params.params`
+
+`python test.py --batch_size 4  --num_views 12   --model model  --num_classes 40 --dataset_path xxxxx/xxxx/modelnet40 --checkpoint ./trained_models/M40-9489.params`
 
 
 

@@ -6,22 +6,21 @@ from pathlib import Path
 
 import mxnet
 from mxnet import gluon
-
-import importlib
+from mxnet import init
+from mxnet.gluon.data.vision.transforms import Compose, ToTensor, Normalize
 
 import utils
 from datahelper import MultiViewImageDataset
-from mxnet.gluon.data.vision.transforms import Compose, ToTensor, Normalize
-
+from model import MVRNN
 
 
 def parse_args():
     '''PARAMETERS'''
     parser = argparse.ArgumentParser('ViewSequenceNet')
 
-    parser.add_argument('--model', type=str, default='model', help='name of the model file')
-    parser.add_argument('--batch_size', type=int, default=2, help='batch size')
-    parser.add_argument('--batch_update_period', type=int, default=64, help='do back propagation after every 64 batches')
+    parser.add_argument('--batch_size', type=int, default=4, help='batch size')
+    parser.add_argument('--batch_update_period', type=int, default=32,
+                        help='do back propagation after every 64 batches')
     parser.add_argument('--epoch', default=100, type=int, help='the number of epochs')
     parser.add_argument('--lr', default=1e-5, type=float, help='the initial learning rate')
     parser.add_argument('--gpu', type=int, nargs='+', default=(0,), help='gpu indices, support multi gpus')
@@ -46,7 +45,6 @@ def parse_args():
     return parser.parse_args()
 
 
-
 def main(args):
     '''create dir'''
     experiment_dir = Path('./experiment/')
@@ -56,10 +54,19 @@ def main(args):
     log_dir = Path('./experiment/logs/')
     log_dir.mkdir(exist_ok=True)
 
-    ctx = mxnet.gpu(args.gpu)
+    ctx = [mxnet.gpu(gpu_id) for gpu_id in args.gpu]
 
-    model = importlib.import_module(args.model)
-    net = model.get_model(args)
+    '''initialize the network'''
+    net = MVRNN(cnn_arch='vgg11_bn', cnn_feature_length=4096, num_views=args.num_views, num_class=args.num_classes,
+                pretrained=True, pretrained_cnn=args.pretrained_cnn, ctx=ctx)
+    if args.checkpoint:
+        net.load_parameters(args.checkpoint, ctx=ctx)
+    else:
+        net.initialize(init=init.MSRAPrelu(), ctx=ctx)
+    net.hybridize()
+    '''set grad_req to 'add' to manually aggregate gradients'''
+    net.collect_params().setattr('grad_req', 'add')
+    net._cnn2.collect_params().setattr('lr_mult', args.output_lr_mult)
 
     '''Setup loss function'''
     loss_fun = gluon.loss.SoftmaxCrossEntropyLoss(sparse_label=not args.label_smoothing)

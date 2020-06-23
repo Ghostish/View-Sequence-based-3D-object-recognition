@@ -10,10 +10,10 @@ def test(metric, ctx, net, val_data, num_views=1, num_class=None):
     assert num_views >= 1, "'num_views' should be greater or equal to 1"
     metric.reset()
 
-    # val_data.reset()
+    print('evaluating...')
     if isinstance(ctx, mxnet.Context):
         ctx = [ctx]
-    for data, label, *rest in val_data:
+    for data, label, *rest in tqdm(val_data):
         if data.shape[0] == 1:
             Xs = [data.as_in_context(ctx[0])]
             Ys = [label.as_in_context(ctx[0])]
